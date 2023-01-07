@@ -14,7 +14,7 @@ const flappyBird = {
     pY: 50,
     velocidade: 0,
     gravidade: .25,
-    atualiza(){
+    atualiza() {
         flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade;
 
         flappyBird.pY = flappyBird.pY + flappyBird.velocidade
@@ -37,9 +37,9 @@ const backGround = {
     altura: 204,
     pX: 0,
     pY: canvasGame.height - 204,
-    desenha(){
-        contexto.fillStyle =  '#70c5ce'
-        contexto.fillRect(0 , 0, canvasGame.clientWidth, canvasGame.height,)
+    desenha() {
+        contexto.fillStyle = '#70c5ce'
+        contexto.fillRect(0, 0, canvasGame.clientWidth, canvasGame.height,)
 
         contexto.drawImage(
             sprites,
@@ -65,7 +65,7 @@ const chao = {
     altura: 112,
     pX: 0,
     pY: canvasGame.height - 112,
-    desenha(){
+    desenha() {
         contexto.drawImage(
             sprites,
             chao.spriteX, chao.spriteY,
@@ -84,20 +84,74 @@ const chao = {
     }
 }
 
-let motor = false
+const gameMessageReady = {
+    spriteX: 133,
+    spriteY: 0,
+    largura: 174,
+    altura: 152,
+    pX: (canvasGame.width / 2) - 174 / 2,
+    pY: 50,
+    desenha() {
+        contexto.drawImage(
+            sprites,
+            gameMessageReady.spriteX, gameMessageReady.spriteY,
+            gameMessageReady.largura, gameMessageReady.altura,
+            (gameMessageReady.pX), gameMessageReady.pY,
+            gameMessageReady.largura, gameMessageReady.altura
+        )
+    }
+}
 
-canvasGame.addEventListener('click', () => {
-    motor = true
-})
+//  Telas
 
+let TelaAtiva = {}
+
+const MudaTela = (novaTela) => {
+    TelaAtiva = novaTela
+
+}
+
+const Telas = {
+    Inicio: {
+        desenha(){
+            backGround.desenha()
+            flappyBird.desenha()
+            chao.desenha()              
+            gameMessageReady.desenha()
+        }, 
+        click(){
+            MudaTela(Telas.Jogo)
+        },
+        atualiza(){
+            
+        }
+    }
+}
+
+Telas.Jogo = {
+    desenha(){
+        backGround.desenha()
+        flappyBird.desenha()
+        chao.desenha()    
+    },
+    atualiza(){
+        flappyBird.atualiza()
+    }
+}
 
 const loop = () => {
-    flappyBird.atualiza()
-    backGround.desenha()    
-    flappyBird.desenha()
-    chao.desenha()
-
+    TelaAtiva.desenha()
+    TelaAtiva.atualiza()
+    
     requestAnimationFrame(loop)
 }
 
+
+window.addEventListener('click', () => {
+    if(TelaAtiva.click) {
+        TelaAtiva.click()
+    }
+})
+
+MudaTela(Telas.Inicio)
 loop()
