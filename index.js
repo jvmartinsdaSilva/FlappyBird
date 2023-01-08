@@ -6,19 +6,21 @@ audioHit.src = "./Efeitos/efeitos_hit.wav"
 
 const canvasGame = document.getElementById('CanvasGame')
 const contexto = canvasGame.getContext('2d')
+let frames = 0
 
-const fazColizao = (flappyBird, chao) => {
+
+function fazColizao(flappyBird, chao) {
     const flappyBirdPy = flappyBird.pY + flappyBird.altura
     const chaoPy = chao.pY
 
-    if(flappyBirdPy >= chaoPy){
+    if (flappyBirdPy >= chaoPy) {
         return true
     } else {
         return false
     }
 }
 
-const criaFlappyBird = () => {
+function criaFlappyBird() {
     const flappyBird = {
         spriteX: 0,
         spriteY: 0,
@@ -30,27 +32,47 @@ const criaFlappyBird = () => {
         gravidade: .25,
         pulo: 4.6,
         atualiza() {
-            if(fazColizao(flappyBird, chao)) {  
-                audioHit.play()        
+            if (fazColizao(flappyBird, globais.chao)) {
+                audioHit.play()
                 setTimeout(() => {
                     MudaTela(Telas.Inicio)
                 }, 500)
 
-                return 
+                return
             }
-         
+
             flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade;
             flappyBird.pY = flappyBird.pY + flappyBird.velocidade
-            
-        },pula(){
-            console.log(flappyBird.velocidade, 'antes')
+
+        }, pula() {
+            // console.log(flappyBird.velocidade, 'antes')
             flappyBird.velocidade = - flappyBird.pulo
-            console.log(flappyBird.velocidade, 'depois')
+            // console.log(flappyBird.velocidade, 'depois')
+        },
+        movimentos: [
+            { spriteX: 0, spriteY: 0 }, //asa paraa cima
+            { spriteX: 0, spriteY: 26 }, // asa no meio
+            { spriteX: 0, spriteY: 52 }, // asa para baixo
+            { spriteX: 0, spriteY: 26 }, // asa no meio
+        ],
+        frameAtual: 0,
+        atualizaFrame(){
+            const intervaloDeFRames = 10
+            const passouItervalo = frames % intervaloDeFRames === 0
+            if(passouItervalo){
+                const baseDoIncremento = 1
+                const incremento = flappyBird.frameAtual + baseDoIncremento
+                const baseDaRepeticao = flappyBird.movimentos.length           
+                flappyBird.frameAtual = incremento % baseDaRepeticao
+            }
         },
         desenha() {
+            flappyBird.atualizaFrame()
+            const {spriteX, spriteY} = flappyBird.movimentos[flappyBird.frameAtual]
+
             contexto.drawImage(
                 sprites,
-                flappyBird.spriteX, flappyBird.spriteY, //Sprite X / Sprite Y
+                spriteX, spriteY, //Sprite X / Sprite Y
                 flappyBird.largura, flappyBird.altura, // Tamnho do recorte da imagentes
                 flappyBird.pX, flappyBird.pY,
                 flappyBird.largura, flappyBird.altura
@@ -89,30 +111,43 @@ const backGround = {
     }
 }
 
-const chao = {
-    spriteX: 0,
-    spriteY: 610,
-    largura: 221,
-    altura: 112,
-    pX: 0,
-    pY: canvasGame.height - 112,
-    desenha() {
-        contexto.drawImage(
-            sprites,
-            chao.spriteX, chao.spriteY,
-            chao.largura, chao.altura,
-            chao.pX, chao.pY,
-            chao.largura, chao.altura
-        )
+function criaChao() {
+    const chao = {
+        spriteX: 0,
+        spriteY: 610,
+        largura: 224,
+        altura: 112,
+        pX: 0,
+        pY: canvasGame.height - 112,
+        atualiza() {
+            const movimentoDoChao = 1
+            const movimentacao = chao.pX = chao.pX - movimentoDoChao
+            const repeteEm = chao.largura / 2
 
-        contexto.drawImage(
-            sprites,
-            chao.spriteX, chao.spriteY,
-            chao.largura, chao.altura,
-            (chao.pX + chao.largura), chao.pY,
-            chao.largura, chao.altura
-        )
+            chao.pX = movimentacao % repeteEm
+
+            // console.log(movimentacao % repeteEm)
+        },
+        desenha() {
+            contexto.drawImage(
+                sprites,
+                chao.spriteX, chao.spriteY,
+                chao.largura, chao.altura,
+                chao.pX, chao.pY,
+                chao.largura, chao.altura
+            )
+
+            contexto.drawImage(
+                sprites,
+                chao.spriteX, chao.spriteY,
+                chao.largura, chao.altura,
+                (chao.pX + chao.largura), chao.pY,
+                chao.largura, chao.altura
+            )
+        }
     }
+
+    return chao
 }
 
 const gameMessageReady = {
@@ -137,10 +172,10 @@ const gameMessageReady = {
 
 const globais = {}
 let TelaAtiva = {}
-const MudaTela = (novaTela) => {
+function MudaTela(novaTela) {
     TelaAtiva = novaTela
 
-    if(TelaAtiva.inicializa) {
+    if (TelaAtiva.inicializa) {
         TelaAtiva.inicializa()
     }
 
@@ -148,49 +183,52 @@ const MudaTela = (novaTela) => {
 
 const Telas = {
     Inicio: {
-        inicializa(){
-            globais.flappyBird = criaFlappyBird() 
+        inicializa() {
+            globais.flappyBird = criaFlappyBird()
+            globais.chao = criaChao()
         },
-        desenha(){
+        desenha() {
             backGround.desenha()
             globais.flappyBird.desenha()
-            chao.desenha()              
+            globais.chao.desenha()
             gameMessageReady.desenha()
-            
-        }, 
-        click(){
+
+        },
+        click() {
             MudaTela(Telas.Jogo)
         },
-        atualiza(){
-            
+        atualiza() {
+            globais.chao.atualiza()
         }
     }
 }
 
 Telas.Jogo = {
-    desenha(){
+    desenha() {
         backGround.desenha()
-        chao.desenha()    
+        globais.chao.desenha()
         globais.flappyBird.desenha()
     },
-    click(){
+    click() {
         globais.flappyBird.pula()
     },
-    atualiza(){
+    atualiza() {
         globais.flappyBird.atualiza()
+        globais.chao.atualiza()
     }
 }
 
-const loop = () => {
+function loop() {
     TelaAtiva.desenha()
     TelaAtiva.atualiza()
-    
+
+    frames++
     requestAnimationFrame(loop)
 }
 
 
 window.addEventListener('click', () => {
-    if(TelaAtiva.click) {
+    if (TelaAtiva.click) {
         TelaAtiva.click()
     }
 })
