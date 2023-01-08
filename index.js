@@ -34,10 +34,7 @@ function criaFlappyBird() {
         atualiza() {
             if (fazColisao(flappyBird, globais.chao)) {
                 audioHit.play()
-                setTimeout(() => {
-                    MudaTela(Telas.Inicio)
-                }, 500)
-
+                MudaTela(Telas.GameOver)
                 return
             }
 
@@ -133,19 +130,19 @@ function criaCanos() {
                     x: canosCeuX,
                     y: canos.altura + canosCeuY
                 },
-                par.CanoChao = {
-                    x: canosChaoX,
-                    y: canosChaoY
-                }
+                    par.CanoChao = {
+                        x: canosChaoX,
+                        y: canosChaoY
+                    }
             })
         },
         temColisaoComFlappiBird(par) {
             const cabecaDoFlappy = globais.flappyBird.pY
             const peDoFlappy = globais.flappyBird.pY + globais.flappyBird.altura
 
-            if (globais.flappyBird.pX >= par.x) {
-                if(cabecaDoFlappy <= par.CanoCeu.y) return true
-                if(peDoFlappy >= par.CanoChao.y) return true
+            if ((globais.flappyBird.pX + globais.flappyBird.largura - 5) >= par.x) {
+                if (cabecaDoFlappy <= par.CanoCeu.y) return true
+                if (peDoFlappy >= par.CanoChao.y) return true
             }
 
             return false
@@ -161,6 +158,7 @@ function criaCanos() {
                         y: -150 * (Math.random() + 1)
                     }
                 )
+
             }
 
             canos.pares.forEach((par) => {
@@ -168,19 +166,14 @@ function criaCanos() {
 
                 if (canos.temColisaoComFlappiBird(par)) {
                     audioHit.play()
-                    setTimeout(() => {
-                        MudaTela(Telas.Inicio)
-                    }, 500)
+                    MudaTela(Telas.GameOver)
                 }
 
                 if (par.x < (0 - canos.largura)) {
                     canos.pares.shift()
-
                 }
             })
-
         }
-
     }
 
     return canos
@@ -265,8 +258,26 @@ const gameMessageReady = {
             sprites,
             gameMessageReady.spriteX, gameMessageReady.spriteY,
             gameMessageReady.largura, gameMessageReady.altura,
-            (gameMessageReady.pX), gameMessageReady.pY,
+            gameMessageReady.pX, gameMessageReady.pY,
             gameMessageReady.largura, gameMessageReady.altura
+        )
+    }
+}
+
+const gameMessageOver = {
+    spriteX: 134,
+    spriteY: 154,
+    largura: 226,
+    altura: 199,
+    pX: (canvasGame.width / 2) - 226 / 2,
+    pY: 50,
+    desenha() {
+        contexto.drawImage(
+            sprites,
+            gameMessageOver.spriteX, gameMessageOver.spriteY,
+            gameMessageOver.largura, gameMessageOver.altura,
+            gameMessageOver.pX, gameMessageOver.pY,
+            gameMessageOver.largura, gameMessageOver.altura
         )
     }
 }
@@ -308,12 +319,35 @@ const Telas = {
     }
 }
 
+function criaPlacar() {
+    const placar = {
+        pontuacao: 0,
+        desenha() {
+            contexto.font = '35px VT323'
+            contexto.textAling = 'right'
+            contexto.fillStyle = 'white'
+            contexto.fillText(placar.pontuacao, canvasGame.width - 20, 35)
+        },
+        atualiza() {
+            const intervaloDeFrames = 100
+            const passouIntervalo = frames % intervaloDeFrames === 0
+
+            if (passouIntervalo) placar.pontuacao = placar.pontuacao + 1
+        }
+    }
+    return placar
+}
+
 Telas.Jogo = {
+    inicializa() {
+        globais.placar = criaPlacar()
+    },
     desenha() {
         backGround.desenha()
-        globais.flappyBird.desenha()
         globais.canos.desenha()
+        globais.flappyBird.desenha()
         globais.chao.desenha()
+        globais.placar.desenha()
     },
     click() {
         globais.flappyBird.pula()
@@ -322,6 +356,19 @@ Telas.Jogo = {
         globais.canos.atualiza()
         globais.flappyBird.atualiza()
         globais.chao.atualiza()
+        globais.placar.atualiza()
+    }
+}
+
+Telas.GameOver = {
+    desenha() {
+        gameMessageOver.desenha()
+    },
+    atualiza() {
+
+    },
+    click() {
+        MudaTela(Telas.Inicio)
     }
 }
 
