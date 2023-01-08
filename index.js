@@ -31,16 +31,14 @@ const criaFlappyBird = () => {
         pulo: 4.6,
         atualiza() {
             if(fazColizao(flappyBird, chao)) {  
-                audioHit.play()    
-                    
+                audioHit.play()        
                 setTimeout(() => {
                     MudaTela(Telas.Inicio)
                 }, 500)
 
                 return 
             }
-
-            
+         
             flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade;
             flappyBird.pY = flappyBird.pY + flappyBird.velocidade
             
